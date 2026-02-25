@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>My School AI Website</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <main class="card">
+    <h1>My AI Website</h1>
+    <p class="sub">Type a sentence and the AI will guess if it’s positive or negative.</p>
+
+    <label for="text">Enter text:</label>
+    <textarea id="text" placeholder="Example: I really enjoyed math class today."></textarea>
+
+    <button id="btn">Analyze</button>
+
+    <section id="result" class="result hidden">
+      <h2>Result</h2>
+      <div class="grid">
+        <div><strong>Prediction:</strong> <span id="pred"></span></div>
+      </div>
+    </section>
+
+    <section id="err" class="error hidden"></section>
+  </main>
+
+  <script>
+    const btn = document.getElementById("btn");
+    const textEl = document.getElementById("text");
+    const resultBox = document.getElementById("result");
+    const errBox = document.getElementById("err");
+    const predEl = document.getElementById("pred");
+
+    function showError(msg){
+      errBox.textContent = msg;
+      errBox.classList.remove("hidden");
+      resultBox.classList.add("hidden");
+    }
+
+    function showResult(pred){
+      predEl.textContent = pred;
+      resultBox.classList.remove("hidden");
+      errBox.classList.add("hidden");
+    }
+
+    btn.addEventListener("click", async () => {
+      const text = textEl.value.trim();
+      if (!text) return showError("Please type something first.");
+
+      btn.disabled = true;
+      btn.textContent = "Thinking...";
+
+      try {
+        const res = await fetch("/api/predict", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({text})
+        });
+        const data = await res.json();
+        if (!res.ok) return showError(data.error || "Something went wrong.");
+        showResult(data.prediction);
+      } catch (e) {
+        showError("Network error. Try again.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Analyze";
+      }
+    });
+  </script>
+</body>
+</html>
